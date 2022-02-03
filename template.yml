@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+
+Resources:
+
+  MyFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: handler.myFunction
+      Runtime: nodejs14.x
+      CodeUri: .  
+      Events:
+        MySQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt MySqsQueue.Arn
+            BatchSize: 1
+  
+  MySqsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      RedrivePolicy: 
+        deadLetterTargetArn : !GetAtt MyDLQQueue.Arn
+        maxReceiveCount : 1
+
+  MyDLQQueue:
+    Type: AWS::SQS::Queue
